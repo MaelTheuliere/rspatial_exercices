@@ -1,0 +1,18 @@
+name: "."
+title: "Exercice pour le module USID06 du master MEDAS du CNAM"
+description: |
+  Exercice pour le module USID06 du master MEDAS du CNAM
+output_dir: "docs"
+navbar:
+  right:
+    - text: "Home"
+      href: index.html
+    - text: "A propos"
+      href: about.html
+    - text: "Exercices"
+      menu:
+    - text: "Exercice 1"
+      href: exercice1.html
+    - text: "Exercice 2"
+      href: exercice2.html
+output: distill::distill_article

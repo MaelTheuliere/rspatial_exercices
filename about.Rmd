@@ -1,0 +1,15 @@
+---
+title: "A propos"
+description: |
+  Description du site
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+Réalisé par Maël THEULIERE, intervenant au module USID 06 du master MEDAS de Nantes.
+
+Le contenu de ce site est sous licence MIT.
+
