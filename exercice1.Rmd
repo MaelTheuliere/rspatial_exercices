@@ -164,7 +164,7 @@ cnam <- data.frame("lat" = 47.250528, "lon" = -1.554224) %>%
   st_as_sf(coords = c("lon", "lat"), crs = 4326)
 ```
 
-Faites de même avec la place du Bouffay et trouver les arrêt de tramway ou busway les plus proches de ces deux sites.
+Faites de même avec la place du Bouffay et trouver les arrêts de tramway ou busway les plus proches de ces deux sites.
 
 ```{r}
 bouffay <- data.frame("lat" = 47.214677, "lon" = -1.553123) %>%
