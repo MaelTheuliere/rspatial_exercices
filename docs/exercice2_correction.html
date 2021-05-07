@@ -85,29 +85,26 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </style>
 
   <!--radix_placeholder_meta_tags-->
-  <title>Exercice pour le module USID06 du master MEDAS du CNAM</title>
+  <title>Exercice pour le module USID06 du master MEDAS du CNAM: Exercice 2 - Manipulation des données dvf</title>
 
-  <meta property="description" itemprop="description" content="Exercice pour le module USID06 du master MEDAS du CNAM"/>
 
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="Exercice pour le module USID06 du master MEDAS du CNAM"/>
+  <meta property="og:title" content="Exercice pour le module USID06 du master MEDAS du CNAM: Exercice 2 - Manipulation des données dvf"/>
   <meta property="og:type" content="article"/>
-  <meta property="og:description" content="Exercice pour le module USID06 du master MEDAS du CNAM"/>
   <meta property="og:locale" content="en_US"/>
   <meta property="og:site_name" content="Exercice pour le module USID06 du master MEDAS du CNAM"/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="Exercice pour le module USID06 du master MEDAS du CNAM"/>
-  <meta property="twitter:description" content="Exercice pour le module USID06 du master MEDAS du CNAM"/>
+  <meta property="twitter:title" content="Exercice pour le module USID06 du master MEDAS du CNAM: Exercice 2 - Manipulation des données dvf"/>
 
   <!--/radix_placeholder_meta_tags-->
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","site"]}},"value":[{"type":"character","attributes":{},"value":["Exercice pour le module USID06 du master MEDAS du CNAM"]},{"type":"character","attributes":{},"value":["Exercice pour le module USID06 du master MEDAS du CNAM\n"]},{"type":"character","attributes":{},"value":["distill::distill_website"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","editor_options"]}},"value":[{"type":"character","attributes":{},"value":["Exercice 2 - Manipulation des données dvf"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["chunk_output_type"]}},"value":[{"type":"character","attributes":{},"value":["inline"]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -2052,7 +2049,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Exercice pour le module USID06 du master MEDAS du CNAM","description":"Exercice pour le module USID06 du master MEDAS du CNAM","authors":[]}
+{"title":"Exercice 2 - Manipulation des données dvf","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2087,15 +2084,207 @@ Exercices
 <!--/radix_placeholder_site_before_body-->
 
 <div class="d-title">
-<h1>Exercice pour le module USID06 du master MEDAS du CNAM</h1>
+<h1>Exercice 2 - Manipulation des données dvf</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
-<p><p>Exercice pour le module USID06 du master MEDAS du CNAM</p></p>
+
 </div>
 
 
 <div class="d-article">
-<div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<p>Objectif :</p>
+<p>Le but de cet exercice va être d’exploiter les données DVF sur les transactions immobilières dans l’ancien et la carte des quartiers de Nantes pour obtenir une carte des volume de ventes et du prix médian des ventes d’appartements par quartier en 2018. On va utiliser pour DVF l’API mise en place par Christian Quest.</p>
+<h2 id="les-packages">Les packages</h2>
+<p>Vous aurez besoin des packages suivants</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://httr.r-lib.org/'>httr</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://arxiv.org/abs/1403.2805'>jsonlite</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://r-spatial.github.io/sf/'>sf</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://lubridate.tidyverse.org'>lubridate</a></span><span class='op'>)</span>
+</code></pre>
+</div>
+</div>
+<h2 id="les-données">Les données</h2>
+<ul>
+<li><p>Données DVF : <a href="http://api.cquest.org/dvf" class="uri">http://api.cquest.org/dvf</a></p></li>
+<li><p>Contour des quartiers de Nantes : <a href="https://data.nantesmetropole.fr/explore/dataset/244400404_quartiers-nantes/information/?disjunctive.nom" class="uri">https://data.nantesmetropole.fr/explore/dataset/244400404_quartiers-nantes/information/?disjunctive.nom</a></p></li>
+</ul>
+<h2 id="lecture-des-données">Lecture des données</h2>
+<h3 id="nantes-métropoles">Nantes métropoles</h3>
+<ul>
+<li>Télécharger les données relatives aux contours de Nantes dans votre projet.</li>
+</ul>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'># provient de nantes métropole open data :https://data.nantesmetropole.fr/explore/dataset/244400404_quartiers-nantes/information/?disjunctive.nom&amp;location=12,47.23826,-1.56032&amp;basemap=jawg.streets</span>
+<span class='va'>quartier_nantes</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_read.html'>st_read</a></span><span class='op'>(</span>dsn <span class='op'>=</span> <span class='st'>"extdata/244400404_quartiers-nantes.geojson"</span><span class='op'>)</span>
+</code></pre>
+</div>
+<pre><code>Reading layer `244400404_quartiers-nantes&#39; from data source `C:\Users\mael.theuliere\Documents\R\rspatial_exercices\extdata\244400404_quartiers-nantes.geojson&#39; using driver `GeoJSON&#39;
+Simple feature collection with 11 features and 5 fields
+geometry type:  POLYGON
+dimension:      XY
+bbox:           xmin: -1.641803 ymin: 47.18059 xmax: -1.478844 ymax: 47.29586
+geographic CRS: WGS 84</code></pre>
+</div>
+<h3 id="dvf">DVF</h3>
+<p>Ci-dessous un exemple de code pour télécharger les données en API et obtenir un dataframe.</p>
+<p>On utilise l’API pour récupérer les données dvf relative à Nantes (code commune 44109).</p>
+<p>On ne garde que les données avec une géolocalisation valide, un prix et une surface renseignés.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>get_dvf</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://httr.r-lib.org/reference/GET.html'>GET</a></span><span class='op'>(</span><span class='st'>"http://api.cquest.org/dvf?code_commune=44109"</span><span class='op'>)</span>
+
+<span class='va'>dvf_content</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://httr.r-lib.org/reference/content.html'>content</a></span><span class='op'>(</span><span class='va'>get_dvf</span>, <span class='st'>"text"</span><span class='op'>)</span>
+
+<span class='va'>dvf_json</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/jsonlite/man/fromJSON.html'>fromJSON</a></span><span class='op'>(</span><span class='va'>dvf_content</span><span class='op'>)</span><span class='op'>$</span><span class='va'>resultats</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>lon</span><span class='op'>)</span>, <span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>lat</span><span class='op'>)</span>, <span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>valeur_fonciere</span><span class='op'>)</span>, <span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>surface_relle_bati</span><span class='op'>)</span><span class='op'>)</span>
+</code></pre>
+</div>
+</div>
+<p>Convertisser ces données en données spatiales.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'><a href='https://rdrr.io/r/base/load.html'>load</a></span><span class='op'>(</span><span class='st'>"extdata/dvf.rda"</span><span class='op'>)</span>
+<span class='va'>dvf</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_as_sf.html'>st_as_sf</a></span><span class='op'>(</span><span class='va'>dvf_json</span>,
+  coords <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"lon"</span>, <span class='st'>"lat"</span><span class='op'>)</span>,
+  crs <span class='op'>=</span> <span class='fl'>4326</span>
+<span class='op'>)</span>
+</code></pre>
+</div>
+</div>
+<h2 id="cartes">Cartes</h2>
+<p>Réaliser une carte du volume de ventes d’appartements par quartier en 2018.</p>
+<p>Que peut on en dire ?</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dvf_avec_quartier</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_join.html'>st_join</a></span><span class='op'>(</span>
+  <span class='va'>dvf</span>,
+  <span class='va'>quartier_nantes</span> <span class='op'>%&gt;%</span>
+    <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='va'>nom</span><span class='op'>)</span>
+<span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rename.html'>rename</a></span><span class='op'>(</span>quartier <span class='op'>=</span> <span class='va'>nom</span><span class='op'>)</span>
+</code></pre>
+</div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dvf_appart_2018</span> <span class='op'>&lt;-</span> <span class='va'>dvf_avec_quartier</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span>
+    <span class='va'>nature_mutation</span> <span class='op'>==</span> <span class='st'>"Vente"</span>,
+    <span class='va'>type_local</span> <span class='op'>==</span> <span class='st'>"Appartement"</span>,
+    <span class='fu'><a href='http://lubridate.tidyverse.org/reference/year.html'>year</a></span><span class='op'>(</span><span class='va'>date_mutation</span><span class='op'>)</span> <span class='op'>==</span> <span class='fl'>2018</span>
+  <span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_geometry.html'>st_drop_geometry</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>quartier</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/count.html'>count</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
+
+<span class='va'>dvf_appart_2018_sf</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>quartier_nantes</span>,
+  <span class='va'>dvf_appart_2018</span>,
+  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"nom"</span> <span class='op'>=</span> <span class='st'>"quartier"</span><span class='op'>)</span>
+<span class='op'>)</span>
+<span class='va'>dvf_appart_2018_sf_centroid</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://r-spatial.github.io/sf/reference/geos_unary.html'>st_centroid</a></span><span class='op'>(</span><span class='va'>dvf_appart_2018_sf</span><span class='op'>)</span>
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsf.html'>geom_sf</a></span><span class='op'>(</span>data <span class='op'>=</span> <span class='va'>dvf_appart_2018_sf</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsf.html'>geom_sf</a></span><span class='op'>(</span>data <span class='op'>=</span> <span class='va'>dvf_appart_2018_sf_centroid</span>, <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>size <span class='op'>=</span> <span class='va'>n</span><span class='op'>)</span>, color <span class='op'>=</span> <span class='st'>"red"</span>, alpha <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_size.html'>scale_size</a></span><span class='op'>(</span>range <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>20</span><span class='op'>)</span>, labels <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/format.html'>format</a></span><span class='op'>(</span><span class='va'>x</span>, big.mark <span class='op'>=</span> <span class='st'>" "</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggtheme.html'>theme_void</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
+    title <span class='op'>=</span> <span class='st'>"Nombre de vente d'appartements à Nantes en 2018"</span>,
+    size <span class='op'>=</span> <span class='cn'>NULL</span>,
+    caption <span class='op'>=</span> <span class='st'>"Source : DVF, géolocalisation : Christian Quest"</span>
+  <span class='op'>)</span>
+</code></pre>
+</div>
+<p><img src="exercice2_correction_files/figure-html5/unnamed-chunk-6-1.png" width="624" /></p>
+</div>
+<p>Réaliser une carte du prix médian au m2 des ventes d’appartements par quartier en 2018.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dvf_appart_2018_prix_m2</span> <span class='op'>&lt;-</span> <span class='va'>dvf_avec_quartier</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span>
+    <span class='va'>nature_mutation</span> <span class='op'>==</span> <span class='st'>"Vente"</span>,
+    <span class='va'>type_local</span> <span class='op'>==</span> <span class='st'>"Appartement"</span>,
+    <span class='fu'><a href='http://lubridate.tidyverse.org/reference/year.html'>year</a></span><span class='op'>(</span><span class='va'>date_mutation</span><span class='op'>)</span> <span class='op'>==</span> <span class='fl'>2018</span>
+  <span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_geometry.html'>st_drop_geometry</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>prix_m2 <span class='op'>=</span> <span class='va'>valeur_fonciere</span> <span class='op'>/</span> <span class='va'>surface_relle_bati</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>quartier</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://r-spatial.github.io/sf/reference/tidyverse.html'>summarise</a></span><span class='op'>(</span>prix_m2 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/median.html'>median</a></span><span class='op'>(</span><span class='va'>prix_m2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
+
+
+<span class='va'>dvf_appart_2018_prix_m2_sf</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>quartier_nantes</span>,
+  <span class='va'>dvf_appart_2018_prix_m2</span>,
+  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"nom"</span> <span class='op'>=</span> <span class='st'>"quartier"</span><span class='op'>)</span>
+<span class='op'>)</span>
+
+
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsf.html'>geom_sf</a></span><span class='op'>(</span>data <span class='op'>=</span> <span class='va'>dvf_appart_2018_prix_m2_sf</span>, <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>fill <span class='op'>=</span> <span class='va'>prix_m2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggtheme.html'>theme_void</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
+    title <span class='op'>=</span> <span class='st'>"Prix médian au m2 des appartements vendus à Nantes en 2018"</span>,
+    fill <span class='op'>=</span> <span class='st'>"prix au m2"</span>,
+    caption <span class='op'>=</span> <span class='st'>"Source : DVF, géolocalisation : Christian Quest"</span>
+  <span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html'>scale_fill_binned</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"viridis"</span><span class='op'>)</span>
+</code></pre>
+</div>
+<p><img src="exercice2_correction_files/figure-html5/unnamed-chunk-7-1.png" width="624" /></p>
+</div>
+<p>Réaliser la même carte en 2014.</p>
+<p>Que peut on en dire ?</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dvf_appart_2014</span> <span class='op'>&lt;-</span> <span class='va'>dvf_avec_quartier</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span>
+    <span class='va'>nature_mutation</span> <span class='op'>==</span> <span class='st'>"Vente"</span>,
+    <span class='va'>type_local</span> <span class='op'>==</span> <span class='st'>"Appartement"</span>,
+    <span class='fu'><a href='http://lubridate.tidyverse.org/reference/year.html'>year</a></span><span class='op'>(</span><span class='va'>date_mutation</span><span class='op'>)</span> <span class='op'>==</span> <span class='fl'>2014</span>
+  <span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_geometry.html'>st_drop_geometry</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>quartier</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/count.html'>count</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
+
+
+<span class='va'>dvf_appart_2014_prix_m2</span> <span class='op'>&lt;-</span> <span class='va'>dvf_avec_quartier</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span>
+    <span class='va'>nature_mutation</span> <span class='op'>==</span> <span class='st'>"Vente"</span>,
+    <span class='va'>type_local</span> <span class='op'>==</span> <span class='st'>"Appartement"</span>,
+    <span class='fu'><a href='http://lubridate.tidyverse.org/reference/year.html'>year</a></span><span class='op'>(</span><span class='va'>date_mutation</span><span class='op'>)</span> <span class='op'>==</span> <span class='fl'>2014</span>
+  <span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://r-spatial.github.io/sf/reference/st_geometry.html'>st_drop_geometry</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>prix_m2 <span class='op'>=</span> <span class='va'>valeur_fonciere</span> <span class='op'>/</span> <span class='va'>surface_relle_bati</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>quartier</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://r-spatial.github.io/sf/reference/tidyverse.html'>summarise</a></span><span class='op'>(</span>prix_m2 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/median.html'>median</a></span><span class='op'>(</span><span class='va'>prix_m2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>ungroup</a></span><span class='op'>(</span><span class='op'>)</span>
+
+
+<span class='va'>dvf_appart_2014_prix_m2_sf</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>quartier_nantes</span>,
+  <span class='va'>dvf_appart_2014_prix_m2</span>,
+  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"nom"</span> <span class='op'>=</span> <span class='st'>"quartier"</span><span class='op'>)</span>
+<span class='op'>)</span>
+
+
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsf.html'>geom_sf</a></span><span class='op'>(</span>data <span class='op'>=</span> <span class='va'>dvf_appart_2014_prix_m2_sf</span>, <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>fill <span class='op'>=</span> <span class='va'>prix_m2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggtheme.html'>theme_void</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
+    title <span class='op'>=</span> <span class='st'>"Prix médian au m2 des appartements vendus à Nantes en 2014"</span>,
+    fill <span class='op'>=</span> <span class='st'>"prix au m2"</span>,
+    caption <span class='op'>=</span> <span class='st'>"Source : DVF, géolocalisation : Christian Quest"</span>
+  <span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html'>scale_fill_binned</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"viridis"</span><span class='op'>)</span>
+</code></pre>
+</div>
+<p><img src="exercice2_correction_files/figure-html5/unnamed-chunk-8-1.png" width="624" /></p>
+</div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>

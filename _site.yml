@@ -17,4 +17,6 @@ navbar:
         href: exercice1_correction.html
       - text: "Exercice 2"
         href: exercice2.html
+      - text: "Exercice 2 (correction)"
+        href: exercice2_correction.html
 output: distill::distill_article

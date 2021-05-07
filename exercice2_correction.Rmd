@@ -1,0 +1,199 @@
+---
+title: "Exercice 2 - Manipulation des données dvf"
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, error = FALSE)
+```
+
+
+Objectif : 
+
+Le but de cet exercice va être d’exploiter les données DVF sur les transactions immobilières dans l’ancien et la carte des quartiers de Nantes pour obtenir une carte des volume de ventes et du prix médian des ventes d'appartements par quartier en 2018. On va utiliser pour DVF l’API mise en place par Christian Quest.
+
+## Les packages
+
+Vous aurez besoin des packages suivants
+
+```{r, echo = TRUE}
+library(httr)
+library(jsonlite)
+library(sf)
+library(tidyverse)
+library(lubridate)
+```
+
+## Les données 
+
+- Données DVF : http://api.cquest.org/dvf
+
+- Contour des quartiers de Nantes : https://data.nantesmetropole.fr/explore/dataset/244400404_quartiers-nantes/information/?disjunctive.nom
+
+
+
+## Lecture des données
+
+### Nantes métropoles
+
+- Télécharger les données relatives aux contours de Nantes dans votre projet.
+
+```{r}
+# provient de nantes métropole open data :https://data.nantesmetropole.fr/explore/dataset/244400404_quartiers-nantes/information/?disjunctive.nom&location=12,47.23826,-1.56032&basemap=jawg.streets
+quartier_nantes <- st_read(dsn = "extdata/244400404_quartiers-nantes.geojson")
+```
+
+### DVF
+
+Ci-dessous un exemple de code pour télécharger les données en API et obtenir un dataframe.
+
+On utilise l'API pour récupérer les données dvf relative à Nantes (code commune 44109).
+
+On ne garde que les données avec une géolocalisation valide, un prix et une surface renseignés.
+
+```{r, eval=FALSE, echo= TRUE}
+get_dvf <- GET("http://api.cquest.org/dvf?code_commune=44109")
+
+dvf_content <- content(get_dvf, "text")
+
+dvf_json <- fromJSON(dvf_content)$resultats %>%
+  filter(!is.na(lon), !is.na(lat), !is.na(valeur_fonciere), !is.na(surface_relle_bati))
+```
+
+Convertisser ces données en données spatiales.
+
+```{r}
+load("extdata/dvf.rda")
+dvf <- st_as_sf(dvf_json,
+  coords = c("lon", "lat"),
+  crs = 4326
+)
+```
+
+## Cartes
+
+Réaliser une carte du volume de ventes d'appartements par quartier en 2018.
+
+Que peut on en dire ? 
+
+```{r}
+dvf_avec_quartier <- st_join(
+  dvf,
+  quartier_nantes %>%
+    select(nom)
+) %>%
+  rename(quartier = nom)
+```
+
+```{r}
+
+dvf_appart_2018 <- dvf_avec_quartier %>%
+  filter(
+    nature_mutation == "Vente",
+    type_local == "Appartement",
+    year(date_mutation) == 2018
+  ) %>%
+  st_drop_geometry() %>%
+  group_by(quartier) %>%
+  count() %>%
+  ungroup()
+
+dvf_appart_2018_sf <- left_join(quartier_nantes,
+  dvf_appart_2018,
+  by = c("nom" = "quartier")
+)
+dvf_appart_2018_sf_centroid <- st_centroid(dvf_appart_2018_sf)
+ggplot() +
+  geom_sf(data = dvf_appart_2018_sf) +
+  geom_sf(data = dvf_appart_2018_sf_centroid, aes(size = n), color = "red", alpha = 0.2) +
+  scale_size(range = c(1, 20), labels = function(x) format(x, big.mark = " ")) +
+  theme_void() +
+  labs(
+    title = "Nombre de vente d'appartements à Nantes en 2018",
+    size = NULL,
+    caption = "Source : DVF, géolocalisation : Christian Quest"
+  )
+```
+
+Réaliser une carte du prix médian au m2 des ventes d'appartements par quartier en 2018.
+
+
+```{r}
+
+dvf_appart_2018_prix_m2 <- dvf_avec_quartier %>%
+  filter(
+    nature_mutation == "Vente",
+    type_local == "Appartement",
+    year(date_mutation) == 2018
+  ) %>%
+  st_drop_geometry() %>%
+  mutate(prix_m2 = valeur_fonciere / surface_relle_bati) %>%
+  group_by(quartier) %>%
+  summarise(prix_m2 = median(prix_m2)) %>%
+  ungroup()
+
+
+dvf_appart_2018_prix_m2_sf <- left_join(quartier_nantes,
+  dvf_appart_2018_prix_m2,
+  by = c("nom" = "quartier")
+)
+
+
+ggplot() +
+  geom_sf(data = dvf_appart_2018_prix_m2_sf, aes(fill = prix_m2)) +
+  theme_void() +
+  labs(
+    title = "Prix médian au m2 des appartements vendus à Nantes en 2018",
+    fill = "prix au m2",
+    caption = "Source : DVF, géolocalisation : Christian Quest"
+  ) +
+  scale_fill_binned(type = "viridis")
+```
+
+Réaliser la même carte en 2014.
+
+Que peut on en dire ? 
+
+```{r}
+dvf_appart_2014 <- dvf_avec_quartier %>%
+  filter(
+    nature_mutation == "Vente",
+    type_local == "Appartement",
+    year(date_mutation) == 2014
+  ) %>%
+  st_drop_geometry() %>%
+  group_by(quartier) %>%
+  count() %>%
+  ungroup()
+
+
+dvf_appart_2014_prix_m2 <- dvf_avec_quartier %>%
+  filter(
+    nature_mutation == "Vente",
+    type_local == "Appartement",
+    year(date_mutation) == 2014
+  ) %>%
+  st_drop_geometry() %>%
+  mutate(prix_m2 = valeur_fonciere / surface_relle_bati) %>%
+  group_by(quartier) %>%
+  summarise(prix_m2 = median(prix_m2)) %>%
+  ungroup()
+
+
+dvf_appart_2014_prix_m2_sf <- left_join(quartier_nantes,
+  dvf_appart_2014_prix_m2,
+  by = c("nom" = "quartier")
+)
+
+
+ggplot() +
+  geom_sf(data = dvf_appart_2014_prix_m2_sf, aes(fill = prix_m2)) +
+  theme_void() +
+  labs(
+    title = "Prix médian au m2 des appartements vendus à Nantes en 2014",
+    fill = "prix au m2",
+    caption = "Source : DVF, géolocalisation : Christian Quest"
+  ) +
+  scale_fill_binned(type = "viridis")
+```
