@@ -11,8 +11,8 @@ navbar:
       href: about.html
     - text: "Exercices"
       menu:
-    - text: "Exercice 1"
-      href: exercice1.html
-    - text: "Exercice 2"
-      href: exercice2.html
+      - text: "Exercice 1"
+        href: exercice1.html
+      - text: "Exercice 2"
+        href: exercice2.html
 output: distill::distill_article

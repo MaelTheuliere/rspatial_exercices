@@ -1,9 +1,9 @@
 ---
-title: "exercice 1 - Manipulation des données de la TAN"
+title: "Exercice 1 - Manipulation des données de la TAN"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 Objectifs : Nous allons cartographier des données opendata de la TAN.
@@ -12,7 +12,7 @@ Objectifs : Nous allons cartographier des données opendata de la TAN.
 
 Vous aurez besoin des packages suivants
 
-```{r}
+```{r, echo=TRUE}
 library(sf)
 library(ggplot2)
 library(leaflet)
@@ -29,35 +29,36 @@ Trois datasets sont utilisés ici :
 
 - les [circuits de la tan](https://data.nantesmetropole.fr/explore/dataset/244400404_tan-circuits/map/?disjunctive.route_type&location=10,47.23143,-1.58181&basemap=jawg.streets)
 
-- les contours de nantes
+- les [contours de nantes](https://raw.githubusercontent.com/MaelTheuliere/rspatial_exercices/main/extdata/44109.geojson)
 
 ## Lecture des données
 
 Importer les données dans R
 
-```{r, echo=FALSE}
+```{r}
 arrets <- read_sf("extdata/244400404_tan-arrets.geojson")
 circuits <- read_sf("extdata/244400404_tan-circuits.geojson")
-nantes <- read_sf("extdata/44109.geojson")
+nantes <- read_sf("extdata/44109.geojson") %>%
+  st_transform(4326)
 ```
 
 La table des arrêts
 
-```{r, echo=FALSE}
+```{r}
 DT::datatable(head(arrets))
 ```
 
 La table des circuits
 
-```{r, echo=FALSE}
+```{r}
 DT::datatable(head(circuits))
 ```
 
-# Cartographier les données
+## Cartographier les données
 
-## Réaliser une carte des tramway et busway de Nantes
+### Réaliser une carte des tramway et busway de Nantes
 
-```{r, echo=FALSE}
+```{r}
 circuits %>%
   filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
   ggplot() +
@@ -71,11 +72,11 @@ circuits %>%
   )
 ```
 
-## Adapter les couleurs des lignes à la charte TAN
+### Adapter les couleurs des lignes à la charte TAN
 
-avec `scale_color_manual()` ajuster les couleurs de la carte
+Avec `scale_color_manual()` ajuster les couleurs de la carte.
 
-```{r, echo=FALSE}
+```{r}
 circuits %>%
   filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
   ggplot() +
@@ -90,10 +91,10 @@ circuits %>%
   )
 ```
 
-## Rajouter une flèche du nord et une barre d'echelle
+### Rajouter une flèche du nord et une barre d'echelle
 
 
-```{r, echo=FALSE}
+```{r}
 circuits %>%
   filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
   ggplot() +
@@ -113,22 +114,24 @@ circuits %>%
 
 ## Manipulations spatiales
 
+### Rattacher les arrêts aux lignes
+
 Identifier par filtre spatial les arrêts de la ligne 2 du Tranway.
 
-```{r, echo=FALSE}
+```{r}
 ligne2 <- circuits %>%
   filter(route_id == "2-0")
 arrets_ligne2 <- st_join(arrets, ligne2) %>%
   filter(!is.na(route_id))
 ```
 
-```{r, echo=FALSE}
+```{r}
 DT::datatable(arrets_ligne2)
 ```
 
-Cartographier les arrêts
+Cartographier les arrêts.
 
-```{r, echo=FALSE}
+```{r}
 ggplot() +
   geom_sf(data = nantes) +
   geom_sf(data = ligne2, color = "blue") +
@@ -142,4 +145,37 @@ ggplot() +
   annotation_north_arrow(location = "bl", height = unit(0.7, "cm"), width = unit(0.7, "cm"))
 ```
 
-Réaliser par jointure spatiale 
+Réaliser par jointure spatiale le rattachement de toutes les stations à leurs circuits. 
+
+```{r}
+arrets_ligne <- st_join(arrets, circuits)
+```
+
+Que constatez vous ?
+
+### Identifier les arrêts pour un trajet
+
+Vous devez partir du CNAM pour vous rendre place du Bouffay pour la réouverture des terrasses.
+
+Voici comment créer un objet sf à partir des coordonnées gps du cnam : 
+
+```{r, echo=TRUE}
+cnam <- data.frame("lat" = 47.250528, "lon" = -1.554224) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+```
+
+Faites de même avec la place du Bouffay et trouver les arrêt de tramway ou busway les plus proches de ces deux sites.
+
+```{r}
+bouffay <- data.frame("lat" = 47.214677, "lon" = -1.553123) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+```
+
+```{r}
+arrets_tramway_busway <- arrets_ligne %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram")
+
+arret_cnam <- arrets_tramway_busway[st_nearest_feature(cnam, arrets_tramway_busway), ]
+
+arret_bouffay <- arrets_tramway_busway[st_nearest_feature(bouffay, arrets_tramway_busway), ]
+```
