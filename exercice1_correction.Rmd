@@ -1,0 +1,201 @@
+---
+title: "Exercice 1 - Manipulation des données de la TAN (correction)"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,error = FALSE)
+```
+
+Objectifs : Nous allons cartographier des données opendata de la TAN.
+
+## Les packages
+
+Vous aurez besoin des packages suivants
+
+```{r, echo=TRUE}
+library(sf)
+library(ggplot2)
+library(leaflet)
+library(dplyr)
+library(ggspatial)
+```
+
+
+
+## Les données
+
+Trois datasets sont utilisés ici : 
+
+- les [arrêts de la tan](https://data.nantesmetropole.fr/explore/dataset/244400404_tan-arrets/map/?location=10,47.23143,-1.58181&basemap=jawg.streets)
+
+- les [circuits de la tan](https://data.nantesmetropole.fr/explore/dataset/244400404_tan-circuits/map/?disjunctive.route_type&location=10,47.23143,-1.58181&basemap=jawg.streets)
+
+- les [contours de nantes](https://raw.githubusercontent.com/MaelTheuliere/rspatial_exercices/main/extdata/44109.geojson)
+
+## Lecture des données
+
+Importer les données dans R
+
+```{r}
+arrets <- read_sf("extdata/244400404_tan-arrets.geojson")
+circuits <- read_sf("extdata/244400404_tan-circuits.geojson")
+nantes <- read_sf("extdata/44109.geojson") %>%
+  st_transform(4326)
+```
+
+La table des arrêts
+
+```{r}
+DT::datatable(head(arrets))
+```
+
+La table des circuits
+
+```{r}
+DT::datatable(head(circuits))
+```
+
+## Cartographier les données
+
+### Réaliser une carte des tramway et busway de Nantes
+
+```{r}
+circuits %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
+  ggplot() +
+  geom_sf(data = nantes) +
+  geom_sf(mapping = aes(color = route_id), size = 1.1) +
+  theme_void() +
+  labs(
+    title = "Tramway et Busway de Nantes",
+    color = "Lignes",
+    caption = "TAN - data.nantesmetropole.fr"
+  )
+```
+
+### Adapter les couleurs des lignes à la charte TAN
+
+Avec `scale_color_manual()` ajuster les couleurs de la carte.
+
+```{r}
+circuits %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
+  ggplot() +
+  geom_sf(data = nantes) +
+  geom_sf(mapping = aes(color = route_id), size = 1.1) +
+  scale_color_manual(values = c("#007a45", "red", "blue", "yellow", "light blue")) +
+  theme_void() +
+  labs(
+    title = "Tramway et Busway de Nantes",
+    color = "Lignes",
+    caption = "TAN - data.nantesmetropole.fr"
+  )
+```
+
+Faire de même et utilisant la variable `route_color` et la fonction `scale_color_identity()` de ggplot2.
+
+```{r}
+circuits %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
+  mutate(route_color = paste0("#",route_color)) %>% 
+  ggplot() +
+  geom_sf(data = nantes) +
+  geom_sf(mapping = aes(color = route_color), size = 1.1) +
+  scale_color_identity() +
+  theme_void() +
+  labs(
+    title = "Tramway et Busway de Nantes",
+    color = "Lignes",
+    caption = "TAN - data.nantesmetropole.fr"
+  )
+```
+
+
+### Rajouter une flèche du nord et une barre d'echelle
+
+
+```{r}
+circuits %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
+  ggplot() +
+  geom_sf(data = nantes) +
+  geom_sf(mapping = aes(color = route_id), size = 1.1) +
+  scale_color_manual(values = c("dark green", "red", "blue", "light blue", "yellow")) +
+  theme_void() +
+  labs(
+    title = "Tramway et Busway de Nantes",
+    color = "Lignes",
+    caption = "TAN - data.nantesmetropole.fr"
+  ) +
+  annotation_scale(location = "br", line_width = .5) +
+  annotation_north_arrow(location = "bl", height = unit(0.7, "cm"), width = unit(0.7, "cm"))
+```
+
+
+## Manipulations spatiales
+
+### Rattacher les arrêts aux lignes
+
+Identifier par filtre spatial les arrêts de la ligne 2 du Tranway.
+
+```{r}
+ligne2 <- circuits %>%
+  filter(route_id == "2-0")
+arrets_ligne2 <- st_join(arrets, ligne2) %>%
+  filter(!is.na(route_id))
+```
+
+```{r}
+DT::datatable(arrets_ligne2)
+```
+
+Cartographier les arrêts.
+
+```{r}
+ggplot() +
+  geom_sf(data = nantes) +
+  geom_sf(data = ligne2, color = "blue") +
+  geom_sf(data = arrets_ligne2, shape = 21, color = "blue", fill = "white") +
+  theme_void() +
+  labs(
+    title = "La ligne 2 de la TAN",
+    caption = "TAN - data.nantesmetropole.fr"
+  ) +
+  annotation_scale(location = "br", line_width = .5) +
+  annotation_north_arrow(location = "bl", height = unit(0.7, "cm"), width = unit(0.7, "cm"))
+```
+
+Réaliser par jointure spatiale le rattachement de toutes les stations à leurs circuits. 
+
+```{r}
+arrets_ligne <- st_join(arrets, circuits)
+```
+
+Que constatez vous ?
+
+### Identifier les arrêts pour un trajet
+
+Vous devez partir du CNAM pour vous rendre place du Bouffay pour la réouverture des terrasses.
+
+Voici comment créer un objet sf à partir des coordonnées gps du cnam : 
+
+```{r, echo=TRUE}
+cnam <- data.frame("lat" = 47.250528, "lon" = -1.554224) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+```
+
+Faites de même avec la place du Bouffay et trouver les arrêts de tramway ou busway les plus proches de ces deux sites.
+
+```{r}
+bouffay <- data.frame("lat" = 47.214677, "lon" = -1.553123) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+```
+
+```{r}
+arrets_tramway_busway <- arrets_ligne %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram")
+
+arret_cnam <- arrets_tramway_busway[st_nearest_feature(cnam, arrets_tramway_busway), ]
+
+arret_bouffay <- arrets_tramway_busway[st_nearest_feature(bouffay, arrets_tramway_busway), ]
+```

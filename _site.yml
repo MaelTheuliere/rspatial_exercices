@@ -5,7 +5,7 @@ description: |
 output_dir: "docs"
 navbar:
   right:
-    - text: "Home"
+    - text: "Accueil"
       href: index.html
     - text: "A propos"
       href: about.html
@@ -13,6 +13,8 @@ navbar:
       menu:
       - text: "Exercice 1"
         href: exercice1.html
+      - text: "Exercice 1 (correction)"
+        href: exercice1_correction.html
       - text: "Exercice 2"
         href: exercice2.html
 output: distill::distill_article
