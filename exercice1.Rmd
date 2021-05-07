@@ -3,12 +3,12 @@ title: "Exercice 1 - Manipulation des données de la TAN"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,error = FALSE)
 ```
 
 Objectifs : Nous allons cartographier des données opendata de la TAN.
 
-## les packages
+## Les packages
 
 Vous aurez besoin des packages suivants
 
@@ -25,6 +25,7 @@ library(ggspatial)
 ## Les données
 
 Trois datasets sont utilisés ici : 
+
 - les [arrêts de la tan](https://data.nantesmetropole.fr/explore/dataset/244400404_tan-arrets/map/?location=10,47.23143,-1.58181&basemap=jawg.streets)
 
 - les [circuits de la tan](https://data.nantesmetropole.fr/explore/dataset/244400404_tan-circuits/map/?disjunctive.route_type&location=10,47.23143,-1.58181&basemap=jawg.streets)
@@ -82,7 +83,7 @@ circuits %>%
   ggplot() +
   geom_sf(data = nantes) +
   geom_sf(mapping = aes(color = route_id), size = 1.1) +
-  scale_color_manual(values = c("dark green", "red", "blue", "yellow", "light blue")) +
+  scale_color_manual(values = c("#007a45", "red", "blue", "yellow", "light blue")) +
   theme_void() +
   labs(
     title = "Tramway et Busway de Nantes",
@@ -90,6 +91,25 @@ circuits %>%
     caption = "TAN - data.nantesmetropole.fr"
   )
 ```
+
+Faire de même et utilisant la variable `route_color` et la fonction `scale_color_identity()` de ggplot2.
+
+```{r}
+circuits %>%
+  filter(route_id %in% c("5-0", "4-0") | route_type == "Tram") %>%
+  mutate(route_color = paste0("#",route_color)) %>% 
+  ggplot() +
+  geom_sf(data = nantes) +
+  geom_sf(mapping = aes(color = route_color), size = 1.1) +
+  scale_color_identity() +
+  theme_void() +
+  labs(
+    title = "Tramway et Busway de Nantes",
+    color = "Lignes",
+    caption = "TAN - data.nantesmetropole.fr"
+  )
+```
+
 
 ### Rajouter une flèche du nord et une barre d'echelle
 
